@@ -4,8 +4,8 @@ const lastRow = hoja.getLastRow();
 function onOpen(){
   const ui = SpreadsheetApp.getUi();
 
-  ui.createMenu("🔹 Calcular Precio")
-    .addItem('Tasa BCV a DOLAR ', 'bcvToDolar')
+  ui.createMenu("Gestión de Precios")
+    .addItem('Convertir BCV a Dólar', 'bcvToDolar')
     .addToUi();
 }
 
@@ -27,16 +27,10 @@ function bcvToDolar(){
 
   if (isNaN(tasa)) throw new Error("Tasa Invalida: "+tasa);
 
-  const totalBs = bolivares.reduce((acc, suma) => {
-    let valor = parseInt(suma) || 0;
-    return acc + valor;
-  }, 0);
+  const conversion = bolivares/tasa;
 
-  if (!totalBs ||  totalBs <= 0 || totalBs == null) throw new Error("Monto Invalido: "+totalBs);
+  if (!conversion ||  conversion <= 0 || conversion == null) throw new Error("Monto Invalido: "+conversion);
 
-  const conversion = totalBs/tasa;
-
-  Logger.log("Monto Total BS: " + totalBs);
   Logger.log("Conversion de BS a $: "+ conversion);
 
   hoja.getRange(row, 17).setValue(conversion);
@@ -55,13 +49,13 @@ function getTasaBCV() {
   try{
     if (posicionUSD !== -1) {
 
-      var inicio = response.indexOf("<strong>", posicionUSD) + 8; 
-      var fin = response.indexOf("</strong>", inicio);
+      const inicio = response.indexOf("<strong>", posicionUSD) + 8; 
+      const fin = response.indexOf("</strong>", inicio);
       
-      var textoTasa = response.substring(inicio, fin).trim(); // "339,14950000"
+      let textoTasa = response.substring(inicio, fin).trim(); // "339,14950000"
       
-      var tasaLimpia = textoTasa.replace(/\./g, "").replace(",", ".");
-      var numeroFinal = parseFloat(tasaLimpia.substring(0, 6));
+      const tasaLimpia = textoTasa.replace(/\./g, "").replace(",", ".");
+      const numeroFinal = parseFloat(tasaLimpia.substring(0, 6));
       
       Logger.log("Tasa del dia: " + numeroFinal);
       return numeroFinal;
@@ -89,12 +83,12 @@ function getBolivares(){
         dateRow.setHours(0,0,0,0);
 
         if (dateRow.getTime() === today.getTime()){
-                        //GetRange --> fila | columna | filas | columnas
-          const bolivares = hoja.getRange(1,i+1, lastRow-2, 11).getValues();
-          Logger.log(bolivares[i]);
 
-          Logger.log("Gastos de hoy (monto): "+bolivares[i]);
-          return {monto: bolivares[i], fila: i+1}; 
+          const row = i + 12;
+          const bolivares = hoja.getRange(i+1, row).getValues()[0];
+
+          Logger.log("Gastos de hoy (monto): "+bolivares);
+          return {monto: bolivares, fila: i+1}; 
         } 
       }
 
@@ -106,5 +100,3 @@ function getBolivares(){
     }
 
 }
-
-
