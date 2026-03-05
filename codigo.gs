@@ -76,6 +76,7 @@ function getBolivares(){
       today.setHours(0,0,0,0);
 
       const fechas = hoja.getRange(1, 1, lastRow - 2, 1).getValues();  
+      Logger.log("Fecha de hoy: "+ today);
 
       for (let i = 0; i < fechas.length; i++){
 
@@ -83,9 +84,9 @@ function getBolivares(){
         dateRow.setHours(0,0,0,0);
 
         if (dateRow.getTime() === today.getTime()){
+           Logger.log("Fecha a comparar: "+ dateRow);
 
-          const row = i + 12;
-          const bolivares = hoja.getRange(i+1, row).getValues()[0];
+          const bolivares = hoja.getRange(i+1, 16).getValues();
 
           Logger.log("Gastos de hoy (monto): "+bolivares);
           return {monto: bolivares, fila: i+1}; 
@@ -100,3 +101,5 @@ function getBolivares(){
     }
 
 }
+
+
