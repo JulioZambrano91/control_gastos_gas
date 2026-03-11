@@ -104,33 +104,3 @@ function getBolivares(){
 }
 
 
-function ingresosToDolar(){
-  const today = new Date();
-  today.setHours(0,0,0,0);
-
-  const fechas = hoja.getRange(1, 1, lastRow-2,1).getValues();
-  let totalIngreso = hoja.getRange("C34").getValue() || 0;
-
-  Logger.log("fechas: "+fechas);
-
-
-  for (let i = 0; i < fechas.length; i++){
-
-    let dateRow = new Date(fechas[i][0]);
-    dateRow.setHours(0,0,0,0);
-
-    if (dateRow.getTime() === today.getTime()){
-      
-      Logger.log("Fecha a comparar: "+ dateRow);
-      let ingreso = hoja.getRange(i+1, 3).getValue() || 0;
-      let tasa = hoja.getRange(i+1, 18).getValue();
-      Logger.log("Ingreso obtenido: "+ tasa);
-      totalIngreso += (ingreso/tasa);
-    }
-  }
-
-  hoja.getRange("C34").setValue(totalIngreso);
-}
-
-
-
