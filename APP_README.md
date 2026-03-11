@@ -14,41 +14,43 @@ Esta es una aplicación web completa (Full-Stack) diseñada para modernizar tu s
 - Tener instalado **Node.js** (v18 o superior).
 - Tener instalado **npm**.
 
-## 📦 Configuración e Instalación
+## 📦 Configuración e Instalación (Automatizada con Make)
 
-### 1. Preparar el Backend
-1. Abre una terminal y navega a la carpeta `backend`:
-   ```bash
-   cd backend
-   ```
-2. Instala las dependencias:
-   ```bash
-   npm install
-   ```
-3. Inicializa la base de datos (SQLite):
-   ```bash
-   npx prisma migrate dev --name init
-   ```
-4. Inicia el servidor de backend:
-   ```bash
-   node index.js
-   ```
-   *El servidor correrá en `http://localhost:3001`.*
+Para simplificar la ejecución, utiliza el `Makefile` incluido en la raíz del proyecto.
 
-### 2. Preparar el Frontend
-1. Abre una nueva terminal y navega a la carpeta `frontend`:
-   ```bash
-   cd frontend
-   ```
-2. Instala las dependencias:
-   ```bash
-   npm install
-   ```
-3. Inicia el servidor de desarrollo de Vite:
-   ```bash
-   npm run dev
-   ```
-   *La aplicación estará disponible en `http://localhost:5173`.*
+### 1. Instalación Inicial
+Ejecuta el siguiente comando para instalar todas las dependencias (Backend y Frontend):
+```bash
+make install
+```
+
+### 2. Configurar Base de Datos
+Crea la base de datos SQLite y las tablas necesarias:
+```bash
+make setup-db
+```
+
+### 3. Ejecución de la Aplicación
+Necesitarás **dos terminales** abiertas:
+
+- **Terminal 1 (Backend/Server)**:
+  ```bash
+  make run-server
+  ```
+  *El servidor correrá en `http://localhost:3001`.*
+
+- **Terminal 2 (Frontend/Client)**:
+  ```bash
+  make run-front
+  ```
+  *La aplicación estará disponible en `http://localhost:5173`.*
+
+---
+
+## 🛠️ Comandos Manuales (Alternativa si no usas Make)
+
+- **Backend**: `cd backend && node index.js`
+- **Frontend**: `cd frontend && npm run dev`
 
 ## 💡 Cómo funciona
 
