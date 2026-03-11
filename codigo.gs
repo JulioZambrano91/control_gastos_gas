@@ -16,13 +16,14 @@ function onOpen(){
 
 function bcvToDolar(){
   
-  const tasa = getTasaBCV();
   const items = getBolivares();
-
-  Logger.log("Items que llego: "+items);
-  
   const bolivares = items.monto;
   const row = items.fila;
+  Logger.log("Items que llego: "+items);
+  
+  const tasa = hoja.getRange(row, 18).getValue() > 0 ? hoja.getRange(row, 18).getValue() : getTasaBCV();
+  Logger.log("Tasa: "+tasa)
+
   Logger.log("Fila a cambiar: "+ row)
 
   if (isNaN(tasa)) throw new Error("Tasa Invalida: "+tasa);
@@ -101,5 +102,35 @@ function getBolivares(){
     }
 
 }
+
+
+function ingresosToDolar(){
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  const fechas = hoja.getRange(1, 1, lastRow-2,1).getValues();
+  let totalIngreso = hoja.getRange("C34").getValue() || 0;
+
+  Logger.log("fechas: "+fechas);
+
+
+  for (let i = 0; i < fechas.length; i++){
+
+    let dateRow = new Date(fechas[i][0]);
+    dateRow.setHours(0,0,0,0);
+
+    if (dateRow.getTime() === today.getTime()){
+      
+      Logger.log("Fecha a comparar: "+ dateRow);
+      let ingreso = hoja.getRange(i+1, 3).getValue() || 0;
+      let tasa = hoja.getRange(i+1, 18).getValue();
+      Logger.log("Ingreso obtenido: "+ tasa);
+      totalIngreso += (ingreso/tasa);
+    }
+  }
+
+  hoja.getRange("C34").setValue(totalIngreso);
+}
+
 
 
