@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { DollarSign, Plus, RefreshCw, Trash2, Calendar, PieChart, Tag, TrendingUp, User, CreditCard, LayoutDashboard, Wallet, ArrowRightLeft, ChevronDown, Building2, Pencil, X, Save, Percent, Clock, BadgeDollarSign, AlertTriangle, Banknote, Send } from "lucide-react";
+import { DollarSign, Plus, RefreshCw, Trash2, Calendar, PieChart, Tag, TrendingUp, User, CreditCard, LayoutDashboard, Wallet, ArrowRightLeft, ChevronDown, Building2, Pencil, X, Save, Percent, Clock, BadgeDollarSign, AlertTriangle, Banknote, Send, BarChart2 } from "lucide-react";
 import UserPanel from "./components/UserPanel";
 import DebtManager from "./components/DebtManager";
+import Analytics from "./components/Analytics";
 import venezuelanBanks from "./data/venezuelanBanks";
 
 const API_BASE = "http://localhost:3001/api";
@@ -295,6 +296,17 @@ function App() {
                 Dashboard
               </button>
               <button
+                onClick={() => setCurrentView("analytics")}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-bold text-sm transition-all ${
+                  currentView === "analytics"
+                    ? "bg-white text-violet-700 shadow-sm"
+                    : "text-slate-500 hover:text-slate-700"
+                }`}
+              >
+                <BarChart2 className="size-4" />
+                Análisis
+              </button>
+              <button
                 onClick={() => setCurrentView("debts")}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-bold text-sm transition-all ${
                   currentView === "debts"
@@ -331,6 +343,8 @@ function App() {
 
         {currentView === "user" ? (
           <UserPanel />
+        ) : currentView === "analytics" ? (
+          <Analytics expenses={expenses} cards={cards} rate={rate} />
         ) : currentView === "debts" ? (
           <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200">
             <DebtManager key={debtRefreshTick} rate={rate} />
