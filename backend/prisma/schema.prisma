@@ -21,3 +21,15 @@ model ExchangeRate {
   date  DateTime @unique @default(now())
   rate  Float
 }
+
+model BankCard {
+  id         Int      @id @default(autoincrement())
+  bankId     String
+  bankName   String
+  bankCode   String
+  last4      String
+  holderName String
+  isNomina   Boolean  @default(false)
+  alias      String   @default("")
+  createdAt  DateTime @default(now())
+}

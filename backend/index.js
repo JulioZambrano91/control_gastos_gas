@@ -19,6 +19,8 @@ if (!USE_MOCK) {
 // Mock-only storage
 let mockExpenses = [];
 let mockRates = [];
+let mockCards = [];
+let mockDebts = [];
 
 const app = express();
 app.use(cors());
@@ -92,9 +94,9 @@ app.get('/api/expenses', async (req, res) => {
   }
 });
 
-// Route to create an expense
+// Actualizar gasto con nuevos campos (subcategory, paymentMethod)
 app.post('/api/expenses', async (req, res) => {
-  const { description, amountVES, rate, category } = req.body;
+  const { description, amountVES, rate, category, cardId, commission, commissionType, subcategory, paymentMethod } = req.body;
   const amountUSD = amountVES / rate;
   const date = new Date();
   const defCategory = category || 'Otros';
@@ -104,9 +106,14 @@ app.post('/api/expenses', async (req, res) => {
       id: Date.now(),
       description,
       category: defCategory,
+      subcategory: subcategory || null,
+      paymentMethod: paymentMethod || 'efectivo',
       amountVES,
       amountUSD,
       exchangeRate: rate,
+      cardId: cardId || null,
+      commission: commission || 0,
+      commissionType: commissionType || 'percent',
       date: date.toISOString()
     };
     mockExpenses.push(expense);
@@ -115,9 +122,134 @@ app.post('/api/expenses', async (req, res) => {
     const expense = await prisma.expense.create({
       data: { description: `[${defCategory}] ${description}`, amountVES, amountUSD, exchangeRate: rate, date }
     });
-    // Formatear salida para que sea igual
-    res.json({ ...expense, description, category: defCategory });
+    res.json({ ...expense, description, category: defCategory, subcategory: subcategory || null, paymentMethod: paymentMethod || 'efectivo', cardId: cardId || null, commission: commission || 0, commissionType: commissionType || 'percent' });
   }
+});
+
+// Actualizar un gasto
+app.put('/api/expenses/:id', async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const { description, amountVES, rate, category, cardId, commission, commissionType } = req.body;
+  const amountUSD = amountVES / rate;
+  const defCategory = category || 'Otros';
+
+  if (USE_MOCK) {
+    const idx = mockExpenses.findIndex(e => e.id === id);
+    if (idx === -1) return res.status(404).json({ error: 'Not found' });
+    mockExpenses[idx] = {
+      ...mockExpenses[idx],
+      description, category: defCategory, amountVES, amountUSD,
+      exchangeRate: rate, cardId: cardId || null,
+      commission: commission || 0, commissionType: commissionType || 'percent'
+    };
+    res.json(mockExpenses[idx]);
+  } else {
+    const expense = await prisma.expense.update({
+      where: { id },
+      data: { description: `[${defCategory}] ${description}`, amountVES, amountUSD, exchangeRate: rate }
+    });
+    res.json({ ...expense, description, category: defCategory, cardId: cardId || null, commission: commission || 0, commissionType: commissionType || 'percent' });
+  }
+});
+
+// Eliminar un gasto
+app.delete('/api/expenses/:id', async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (USE_MOCK) {
+    mockExpenses = mockExpenses.filter(e => e.id !== id);
+    res.json({ success: true });
+  } else {
+    await prisma.expense.delete({ where: { id } });
+    res.json({ success: true });
+  }
+});
+
+// ===== RUTAS DE TARJETAS BANCARIAS =====
+
+// Obtener todas las tarjetas
+app.get('/api/cards', async (req, res) => {
+  if (USE_MOCK) {
+    res.json(mockCards || []);
+  } else {
+    const cards = await prisma.bankCard.findMany({ orderBy: { createdAt: 'desc' } });
+    res.json(cards);
+  }
+});
+
+// Crear nueva tarjeta
+app.post('/api/cards', async (req, res) => {
+  const { bankId, bankName, bankCode, last4, holderName, isNomina, alias } = req.body;
+  if (USE_MOCK) {
+    const card = { id: Date.now(), bankId, bankName, bankCode, last4, holderName, isNomina: !!isNomina, alias: alias || '', createdAt: new Date().toISOString() };
+    mockCards.push(card);
+    res.json(card);
+  } else {
+    const card = await prisma.bankCard.create({
+      data: { bankId, bankName, bankCode, last4, holderName, isNomina: !!isNomina, alias: alias || '' }
+    });
+    res.json(card);
+  }
+});
+
+// Eliminar tarjeta
+app.delete('/api/cards/:id', async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (USE_MOCK) {
+    mockCards = (mockCards || []).filter(c => c.id !== id);
+    res.json({ success: true });
+  } else {
+    await prisma.bankCard.delete({ where: { id } });
+    res.json({ success: true });
+  }
+});
+
+// Actualizar tarjeta
+app.put('/api/cards/:id', async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const { bankId, bankName, bankCode, last4, holderName, isNomina, alias } = req.body;
+  if (USE_MOCK) {
+    const idx = (mockCards || []).findIndex(c => c.id === id);
+    if (idx === -1) return res.status(404).json({ error: 'Not found' });
+    mockCards[idx] = { ...mockCards[idx], bankId, bankName, bankCode, last4, holderName, isNomina: !!isNomina, alias: alias || '' };
+    res.json(mockCards[idx]);
+  } else {
+    const card = await prisma.bankCard.update({
+      where: { id },
+      data: { bankId, bankName, bankCode, last4, holderName, isNomina: !!isNomina, alias: alias || '' }
+    });
+    res.json(card);
+  }
+});
+
+// ===== RUTAS DE DEUDAS / CACHEA =====
+
+// Obtener todas las deudas
+app.get('/api/debts', (req, res) => {
+  res.json([...mockDebts].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+});
+
+// Crear nueva deuda
+app.post('/api/debts', (req, res) => {
+  const debt = { ...req.body, id: req.body.id || Date.now() };
+  mockDebts.push(debt);
+  res.json(debt);
+});
+
+// Actualizar deuda (abonar, editar)
+app.put('/api/debts/:id', (req, res) => {
+  const id = parseInt(req.params.id, 10) || req.params.id;
+  const idx = mockDebts.findIndex(d => d.id === id || String(d.id) === String(req.params.id));
+  if (idx === -1) return res.status(404).json({ error: 'Deuda no encontrada' });
+  mockDebts[idx] = { ...mockDebts[idx], ...req.body };
+  res.json(mockDebts[idx]);
+});
+
+// Eliminar deuda
+app.delete('/api/debts/:id', (req, res) => {
+  const before = mockDebts.length;
+  mockDebts = mockDebts.filter(d => String(d.id) !== String(req.params.id));
+  if (mockDebts.length === before) return res.status(404).json({ error: 'Deuda no encontrada' });
+  res.json({ success: true });
 });
 
 const PORT = process.env.PORT || 3001;
